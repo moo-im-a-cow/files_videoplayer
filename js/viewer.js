@@ -8,7 +8,8 @@ var videoViewer = {
 				var stylePath = OC.filePath('files_videoplayer', 'videojs', 'src/video-js.css');
 				$('head').append($('<link rel="stylesheet" type="text/css" href="' + stylePath + '"/>'));
 				var scriptPath = OC.filePath('files_videoplayer', 'videojs', 'src/video.js');
-				return $.getScript(scriptPath)
+				var pluginPath = OC.filePath('files_videoplayer', 'videojs', 'plugins/videojs.hotkeys.min.js');
+				return $.getScript(scriptPath).done(function() { $.getScript(pluginPath) });
 			}
 		},
 		videoJSLoaded: false,
@@ -37,6 +38,11 @@ var videoViewer = {
 			overlay.fadeIn('fast');
 			// initialize player
 			videojs("my_video_1").ready(function() {
+				// setup hotkeys
+				this.hotkeys({
+					enableModifiersForNumbers: false
+				});
+				// setup video player
 				videoViewer.player = this;
 				// append close button to video element
 				var closeButton = $('<a class="icon-view-close" id="box-close" href="#"></a>').click(videoViewer.hidePlayer);
