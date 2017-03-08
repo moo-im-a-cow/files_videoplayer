@@ -15,5 +15,9 @@
 *
 */
 
-OCP\Util::addStyle( 'files_videoplayer', 'style' );
-OCP\Util::addscript( 'files_videoplayer', 'viewer');
+OCP\Util::addStyle( 'plyr_videoplayer', 'style' );
+OCP\Util::addStyle( 'plyr_videoplayer', 'plyr' );
+
+OCP\Util::addscript( 'plyr_videoplayer', 'viewer');
+OCP\Util::addscript( 'plyr_videoplayer', 'plyr');
+

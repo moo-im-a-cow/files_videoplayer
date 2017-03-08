@@ -5,14 +5,14 @@ var videoViewer = {
 				return $.when();
 			} else {
 				this.videoJSLoaded = true;
-				var stylePath = OC.filePath('files_videoplayer', 'videojs', 'src/video-js.css');
+				var stylePath = OC.filePath('plyr_videoplayer', 'css', 'plyr.css');
 				$('head').append($('<link rel="stylesheet" type="text/css" href="' + stylePath + '"/>'));
-				var scriptPath = OC.filePath('files_videoplayer', 'videojs', 'src/video.js');
+				var scriptPath = OC.filePath('plyr_videoplayer', 'js', 'plyr.js');
 				return $.getScript(scriptPath)
 			}
 		},
 		videoJSLoaded: false,
-		playerTemplate : '<video id="my_video_1" class="video-js vjs-sublime-skin" controls preload="auto" width="100%" height="100%" poster="'+OC.filePath('files_videoplayer', '', 'img')+'/poster.png" data-setup=\'{"techOrder": ["html5"]}\'>' +
+		playerTemplate : '<video id="my_video_1" controls preload="auto" width="100%" height="100%" poster="'+OC.filePath('plyr_videoplayer', '', 'img')+'/poster.png">' +
 		'<source type="%type%" src="%src%" />' +
 		'</video>',
 		show : function () {
@@ -35,14 +35,18 @@ var videoViewer = {
 			});
 			// show elements
 			overlay.fadeIn('fast');
+
 			// initialize player
-			videojs("my_video_1").ready(function() {
-				videoViewer.player = this;
+			var plyrvids = plyr.setup("#my_video_1");
+			plyrvids[0].on('ready', function(event) {
+				videoViewer.player = event.detail.plyr;
 				// append close button to video element
 				var closeButton = $('<a class="icon-view-close" id="box-close" href="#"></a>').click(videoViewer.hidePlayer);
-				$("#my_video_1").append(closeButton);
+				$("#videoplayer_container").append(closeButton);
+
 				// autoplay
 				videoViewer.player.play();
+
 			});
 
 		},
@@ -62,15 +66,20 @@ var videoViewer = {
 		'video/x-flv',
 		'video/ogg',
 		'video/quicktime',
-		'video/x-matroska'
+		'video/x-matroska',
 	],
 	mimeTypeAliasses: {
-		'video/x-matroska': 'video/webm' // mkv support for Chrome. webm uses the same container format
+		'video/x-matroska': 'video/webm' // chrome is a little kid that refuses to play mkv if it knows it's an mkv, webm uses the same container format
 	},
 	onView : function(file, data) {
 		videoViewer.file = file;
 		videoViewer.dir = data.dir;
-		videoViewer.location = data.fileList.getDownloadUrl(file, videoViewer.dir);
+		if ($('#isPublic').length){
+			// No seek for public videos atm, sorry
+			videoViewer.location = data.fileList.getDownloadUrl(file, videoViewer.dir);
+		} else {
+			videoViewer.location = OC.linkToRemote('webdav') + OC.joinPaths(videoViewer.dir, file);
+		}
 		videoViewer.mime = data.$file.attr('data-mime');
 		if (videoViewer.mimeTypeAliasses.hasOwnProperty(videoViewer.mime)) {
 			videoViewer.mime = videoViewer.mimeTypeAliasses[videoViewer.mime];
@@ -84,7 +93,7 @@ var videoViewer = {
 	},
 	hidePlayer : function() {
 		if (videoViewer.player !== null && videoViewer.player !== false) {
-			videoViewer.player.dispose();
+			videoViewer.player.destroy();
 			videoViewer.player = false;
 			videoViewer.UI.hide();
 		}
